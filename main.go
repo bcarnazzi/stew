@@ -48,65 +48,6 @@ func main() {
 		Usage: "A simple dotfiles manager",
 		Commands: []*cli.Command{
 			{
-				Name:    "list",
-				Aliases: []string{"ls"},
-				Usage:   "List managed dotfiles",
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					args := cmd.Args().Slice()
-
-					entries, err := os.ReadDir(repository)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					for _, entry := range entries {
-						name := entry.Name()
-						if entry.IsDir() && !strings.HasPrefix(name, ".") {
-							display := len(args) == 0
-							if !display {
-								if slices.Contains(args, name) {
-									display = true
-								}
-							}
-							if display {
-								fmt.Printf("%s:\n", name)
-							} else {
-								continue
-							}
-						} else {
-							continue
-						}
-
-						dotFilePath := filepath.Join(repository, name)
-						err = filepath.Walk(dotFilePath, func(path string, info fs.FileInfo, err error) error {
-							if err != nil {
-								return err
-							}
-
-							if info.IsDir() {
-								return nil
-							}
-
-							relPath, err := filepath.Rel(dotFilePath, path)
-							if err != nil {
-								return err
-							}
-
-							if relPath != "." {
-								fmt.Printf("  %s\n", relPath)
-							}
-
-							return nil
-						})
-						if err != nil {
-							return err
-						}
-
-					}
-					return nil
-				},
-			},
-			{
 				Name:    "adopt",
 				Usage:   "Adopt unmanaged dotfiles",
 				Aliases: []string{"a"},
@@ -179,47 +120,6 @@ func main() {
 				},
 			},
 			{
-				Name:    "link",
-				Usage:   "Link managed dotfiles",
-				Aliases: []string{"ln"},
-				Action: func(_ context.Context, cmd *cli.Command) error {
-					args := cmd.Args().Slice()
-					var errCode error
-					if len(args) == 0 {
-						return fmt.Errorf("need at least one arguments")
-					}
-
-					for _, p := range args {
-						cmd := exec.Command("stow", "-d", repository, p)
-						if err := cmd.Run(); err != nil {
-							logWarn("Cannot link " + p)
-							errCode = err
-						} else {
-							logInfo(p + " linked")
-						}
-					}
-					return errCode
-				},
-			},
-			{
-				Name:    "sync",
-				Usage:   "Sync dotfiles to remote repository",
-				Aliases: []string{"s"},
-				Action: func(_ context.Context, _ *cli.Command) error {
-					cmd := exec.Command("git", "pull")
-					if err := cmd.Run(); err != nil {
-						return err
-					}
-
-					cmd = exec.Command("git", "push")
-					if err := cmd.Run(); err != nil {
-						return err
-					}
-
-					return nil
-				},
-			},
-			{
 				Name:    "doctor",
 				Usage:   "Check stew configuration and dependencies",
 				Aliases: []string{"d"},
@@ -256,6 +156,108 @@ func main() {
 					logOk("stow command found at " + path)
 
 					return errCode
+				},
+			},
+			{
+				Name:    "link",
+				Usage:   "Link managed dotfiles",
+				Aliases: []string{"ln"},
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					args := cmd.Args().Slice()
+					var errCode error
+					if len(args) == 0 {
+						return fmt.Errorf("need at least one arguments")
+					}
+
+					for _, p := range args {
+						cmd := exec.Command("stow", "-d", repository, p)
+						if err := cmd.Run(); err != nil {
+							logWarn("Cannot link " + p)
+							errCode = err
+						} else {
+							logInfo(p + " linked")
+						}
+					}
+					return errCode
+				},
+			},
+			{
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "List managed dotfiles",
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					args := cmd.Args().Slice()
+
+					entries, err := os.ReadDir(repository)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					for _, entry := range entries {
+						name := entry.Name()
+						if entry.IsDir() && !strings.HasPrefix(name, ".") {
+							display := len(args) == 0
+							if !display {
+								if slices.Contains(args, name) {
+									display = true
+								}
+							}
+							if display {
+								fmt.Printf("%s:\n", name)
+							} else {
+								continue
+							}
+						} else {
+							continue
+						}
+
+						dotFilePath := filepath.Join(repository, name)
+						err = filepath.Walk(dotFilePath, func(path string, info fs.FileInfo, err error) error {
+							if err != nil {
+								return err
+							}
+
+							if info.IsDir() {
+								return nil
+							}
+
+							relPath, err := filepath.Rel(dotFilePath, path)
+							if err != nil {
+								return err
+							}
+
+							if relPath != "." {
+								fmt.Printf("  %s\n", relPath)
+							}
+
+							return nil
+						})
+						if err != nil {
+							return err
+						}
+
+					}
+					return nil
+				},
+			},
+			{
+				Name:    "sync",
+				Usage:   "Sync dotfiles to remote repository",
+				Aliases: []string{"s"},
+				Action: func(_ context.Context, _ *cli.Command) error {
+					cmd := exec.Command("git", "pull")
+					cmd.Dir = repository
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+
+					cmd = exec.Command("git", "push")
+					cmd.Dir = repository
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+
+					return nil
 				},
 			},
 		},
