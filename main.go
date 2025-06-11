@@ -50,7 +50,7 @@ func main() {
 			{
 				Name:    "adopt",
 				Usage:   "Adopt unmanaged dotfiles",
-				Aliases: []string{"a"},
+				Aliases: []string{"ad"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "name",
@@ -120,9 +120,8 @@ func main() {
 				},
 			},
 			{
-				Name:    "doctor",
-				Usage:   "Check stew configuration and dependencies",
-				Aliases: []string{"d"},
+				Name:  "doctor",
+				Usage: "Check stew configuration and dependencies",
 				Action: func(_ context.Context, _ *cli.Command) error {
 					var errCode error
 
@@ -241,9 +240,23 @@ func main() {
 				},
 			},
 			{
-				Name:    "sync",
-				Usage:   "Sync dotfiles to remote repository",
-				Aliases: []string{"s"},
+				Name:  "status",
+				Usage: "get status of the git repository",
+				Action: func(_ context.Context, _ *cli.Command) error {
+					cmd := exec.Command("git", "status")
+					cmd.Dir = repository
+					output, err := cmd.CombinedOutput()
+					if err != nil {
+						return err
+					}
+
+					fmt.Printf("%s", output)
+					return nil
+				},
+			},
+			{
+				Name:  "sync",
+				Usage: "Sync dotfiles to remote repository",
 				Action: func(_ context.Context, _ *cli.Command) error {
 					cmd := exec.Command("git", "pull")
 					cmd.Dir = repository
