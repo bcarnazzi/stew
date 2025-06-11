@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -11,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/fatih/color"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"slices"
 )
 
@@ -42,15 +43,15 @@ func main() {
 
 	repository := filepath.Join(home, stewRepository)
 
-	app := &cli.App{
+	cmd := &cli.Command{
 		Name:  "stew",
 		Usage: "A simple dotfiles manager",
 		Commands: []*cli.Command{
 			{
 				Name:  "ls",
 				Usage: "List managed dotfiles",
-				Action: func(c *cli.Context) error {
-					args := c.Args().Slice()
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					args := cmd.Args().Slice()
 
 					entries, err := os.ReadDir(repository)
 					if err != nil {
@@ -107,8 +108,15 @@ func main() {
 			{
 				Name:  "adopt",
 				Usage: "Adopt unmanaged dotfiles",
-				Action: func(c *cli.Context) error {
-					args := c.Args().Slice()
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "name",
+						Value: "",
+						Usage: "package name",
+					},
+				},
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					args := cmd.Args().Slice()
 					var packageName string
 
 					if len(args) == 1 {
@@ -120,6 +128,9 @@ func main() {
 						logInfo("abs path: " + absPath)
 
 						packageName = filepath.Base(absPath) // package
+						if cmd.String("name") != "" {
+							packageName = cmd.String("name")
+						}
 						logInfo("package name: " + packageName)
 						relName, err := filepath.Rel(home, absPath) // .config/package
 						if err != nil {
@@ -151,8 +162,8 @@ func main() {
 			{
 				Name:  "link",
 				Usage: "Link managed dotfiles",
-				Action: func(c *cli.Context) error {
-					args := c.Args().Slice()
+				Action: func(_ context.Context, cmd *cli.Command) error {
+					args := cmd.Args().Slice()
 					var errCode error
 					if len(args) == 0 {
 						return fmt.Errorf("need at least one arguments")
@@ -173,7 +184,7 @@ func main() {
 			{
 				Name:  "doctor",
 				Usage: "Check stew configuration and dependencies",
-				Action: func(c *cli.Context) error {
+				Action: func(_ context.Context, _ *cli.Command) error {
 					var errCode error
 
 					if home == "" {
@@ -211,8 +222,7 @@ func main() {
 		},
 	}
 
-	err := app.Run(os.Args)
-	if err != nil {
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		log.Fatal(err)
 	}
 }
