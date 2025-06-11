@@ -47,7 +47,7 @@ func main() {
 		Usage: "A simple dotfiles manager",
 		Commands: []*cli.Command{
 			{
-				Name:  "list",
+				Name:  "ls",
 				Usage: "List managed dotfiles",
 				Action: func(c *cli.Context) error {
 					args := c.Args().Slice()
@@ -109,77 +109,40 @@ func main() {
 				Usage: "Adopt unmanaged dotfiles",
 				Action: func(c *cli.Context) error {
 					args := c.Args().Slice()
-					if len(args) < 2 {
-						return fmt.Errorf("need at least two arguments")
-					}
+					var packageName string
 
-					sources := args[:len(args)-1]
-					destination := filepath.Join(repository, args[len(args)-1])
-
-					_, err := os.Stat(destination)
-					if os.IsNotExist(err) {
-						err = os.Mkdir(destination, 0755)
+					if len(args) == 1 {
+						path := args[0]                    // .config/package
+						absPath, err := filepath.Abs(path) // /home/xxx/.config/package
 						if err != nil {
 							return err
 						}
-					}
+						logInfo("abs path: " + absPath)
 
-					for _, source := range sources {
-						// Check if symlink to stew repository
-						info, err := os.Lstat(source)
+						packageName = filepath.Base(absPath) // package
+						logInfo("package name: " + packageName)
+						relName, err := filepath.Rel(home, absPath) // .config/package
 						if err != nil {
-							log.Fatal(err)
+							return err
 						}
+						logInfo("rel name: " + relName)
 
-						if info.Mode()&os.ModeSymlink != 0 {
-							linkDest, err := os.Readlink(source)
-							if err != nil {
-								return err
-							}
+						dirName := filepath.Dir(relName) // .config
+						logInfo("dir name: " + dirName)
+						repoName := filepath.Join(repository, packageName, dirName) // /home/xxx/.dotfiles/package/.config
+						logInfo("repo name: " + repoName)
 
-							absLinkDest, err := filepath.Abs(filepath.Join(filepath.Dir(source), linkDest))
-							if err != nil {
-								return err
-							}
-
-							// logInfo("Checking symlink: " + absLinkDest + " -> " + stewRepository)
-							if strings.HasPrefix(absLinkDest, stewRepository) {
-								logWarn(source + " is already managed. Skipping.")
-								continue
-							}
-						}
-						// logInfo("Not a symlink: " + source)
-
-						absSource, err := filepath.Abs(source)
+						err = os.MkdirAll(repoName, 0750)
 						if err != nil {
 							return err
 						}
 
-						relSource, err := filepath.Rel(home, absSource)
+						destName := filepath.Join(repoName, packageName)
+						err = os.Rename(absPath, destName)
 						if err != nil {
 							return err
 						}
 
-						absDest := filepath.Join(destination, relSource)
-
-						_ = os.MkdirAll(filepath.Dir(absDest), 0755)
-
-						logInfo("Moving " + source + " to " + absDest)
-						err = os.Rename(source, absDest)
-						if err != nil {
-							return err
-						}
-
-						relDest, err := filepath.Rel(filepath.Dir(absSource), absDest)
-						if err != nil {
-							return err
-						}
-
-						logInfo("Linking " + relDest + " to " + source)
-						err = os.Symlink(relDest, source)
-						if err != nil {
-							return err
-						}
 					}
 
 					return nil
