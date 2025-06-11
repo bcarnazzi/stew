@@ -48,8 +48,9 @@ func main() {
 		Usage: "A simple dotfiles manager",
 		Commands: []*cli.Command{
 			{
-				Name:  "ls",
-				Usage: "List managed dotfiles",
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "List managed dotfiles",
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					args := cmd.Args().Slice()
 
@@ -106,49 +107,67 @@ func main() {
 				},
 			},
 			{
-				Name:  "adopt",
-				Usage: "Adopt unmanaged dotfiles",
+				Name:    "adopt",
+				Usage:   "Adopt unmanaged dotfiles",
+				Aliases: []string{"a"},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "name",
-						Value: "",
-						Usage: "package name",
+						Name:    "name",
+						Aliases: []string{"n"},
+						Value:   "",
+						Usage:   "Package name",
 					},
 				},
 				Action: func(_ context.Context, cmd *cli.Command) error {
-					args := cmd.Args().Slice()
 					var packageName string
+					args := cmd.Args().Slice()
 
+					name := cmd.String("name")
 					if len(args) == 1 {
-						path := args[0]                    // .config/package
+						if name == "" {
+							packageName = filepath.Base(args[0])
+						} else {
+							packageName = name
+						}
+					} else {
+						if name == "" {
+							log.Fatal("Package name must be provided when adopting multiple files")
+						} else {
+							packageName = name
+						}
+					}
+					// logInfo("package name: " + packageName)
+
+					for _, path := range args {
 						absPath, err := filepath.Abs(path) // /home/xxx/.config/package
 						if err != nil {
 							return err
 						}
-						logInfo("abs path: " + absPath)
 
-						packageName = filepath.Base(absPath) // package
-						if cmd.String("name") != "" {
-							packageName = cmd.String("name")
+						_, err = os.Stat(absPath)
+						if err != nil {
+							return err
 						}
-						logInfo("package name: " + packageName)
+
+						// logInfo("abs path: " + absPath)
+
 						relName, err := filepath.Rel(home, absPath) // .config/package
 						if err != nil {
 							return err
 						}
-						logInfo("rel name: " + relName)
+						// logInfo("rel name: " + relName)
 
 						dirName := filepath.Dir(relName) // .config
 						logInfo("dir name: " + dirName)
 						repoName := filepath.Join(repository, packageName, dirName) // /home/xxx/.dotfiles/package/.config
-						logInfo("repo name: " + repoName)
+						// logInfo("repo name: " + repoName)
 
 						err = os.MkdirAll(repoName, 0750)
 						if err != nil {
 							return err
 						}
 
-						destName := filepath.Join(repoName, packageName)
+						destName := filepath.Join(repoName, filepath.Base(absPath))
 						err = os.Rename(absPath, destName)
 						if err != nil {
 							return err
@@ -160,8 +179,9 @@ func main() {
 				},
 			},
 			{
-				Name:  "link",
-				Usage: "Link managed dotfiles",
+				Name:    "link",
+				Usage:   "Link managed dotfiles",
+				Aliases: []string{"ln"},
 				Action: func(_ context.Context, cmd *cli.Command) error {
 					args := cmd.Args().Slice()
 					var errCode error
@@ -182,8 +202,27 @@ func main() {
 				},
 			},
 			{
-				Name:  "doctor",
-				Usage: "Check stew configuration and dependencies",
+				Name:    "sync",
+				Usage:   "Sync dotfiles to remote repository",
+				Aliases: []string{"s"},
+				Action: func(_ context.Context, _ *cli.Command) error {
+					cmd := exec.Command("git", "pull")
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+
+					cmd = exec.Command("git", "push")
+					if err := cmd.Run(); err != nil {
+						return err
+					}
+
+					return nil
+				},
+			},
+			{
+				Name:    "doctor",
+				Usage:   "Check stew configuration and dependencies",
+				Aliases: []string{"d"},
 				Action: func(_ context.Context, _ *cli.Command) error {
 					var errCode error
 
