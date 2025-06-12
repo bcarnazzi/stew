@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
-	"stew/tools"
+	"stew/utils"
 
 	"github.com/urfave/cli/v3"
 )
@@ -18,33 +18,33 @@ func Doctor(home, repository string) *cli.Command {
 			var errCode error
 
 			if home == "" {
-				tools.LogWarn("Undefined HOME")
+				utils.LogWarn("Undefined HOME")
 				errCode = errors.New("undefined home")
 			} else {
-				tools.LogOk("home directory is " + home)
+				utils.LogOk("home directory is " + home)
 			}
 
 			_, err := os.Stat(repository)
 			if err != nil {
-				tools.LogWarn("Cannot find repository at " + err.Error())
+				utils.LogWarn("Cannot find repository at " + err.Error())
 				errCode = err
 			} else {
-				tools.LogOk("repository is " + repository)
+				utils.LogOk("repository is " + repository)
 			}
 
 			path, err := exec.LookPath("git")
 			if err != nil {
-				tools.LogWarn("git command not found")
+				utils.LogWarn("git command not found")
 				errCode = err
 			}
-			tools.LogOk("git command found at " + path)
+			utils.LogOk("git command found at " + path)
 
 			path, err = exec.LookPath("stow")
 			if err != nil {
-				tools.LogWarn("stow command not found")
+				utils.LogWarn("stow command not found")
 				errCode = err
 			}
-			tools.LogOk("stow command found at " + path)
+			utils.LogOk("stow command found at " + path)
 
 			return errCode
 		},

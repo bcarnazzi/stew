@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"stew/tools"
+	"stew/utils"
 
 	"github.com/urfave/cli/v3"
 )
@@ -40,12 +40,12 @@ func Adopt(home, repository string) *cli.Command {
 				}
 			} else {
 				if name == "" {
-					tools.LogFatal("Package name must be provided when adopting multiple files")
+					utils.LogFatal("Package name must be provided when adopting multiple files")
 				} else {
 					packageName = name
 				}
 			}
-			// tools.LogInfo("package name: " + packageName)
+			// utils.LogInfo("package name: " + packageName)
 
 			for _, path := range args {
 				absPath, err := filepath.Abs(path) // /home/xxx/.config/package
@@ -58,18 +58,18 @@ func Adopt(home, repository string) *cli.Command {
 					return err
 				}
 
-				// tools.LogInfo("abs path: " + absPath)
+				// utils.LogInfo("abs path: " + absPath)
 
 				relName, err := filepath.Rel(home, absPath) // .config/package
 				if err != nil {
 					return err
 				}
-				// tools.LogInfo("rel name: " + relName)
+				// utils.LogInfo("rel name: " + relName)
 
 				dirName := filepath.Dir(relName) // .config
-				tools.LogInfo("dir name: " + dirName)
+				utils.LogInfo("dir name: " + dirName)
 				repoName := filepath.Join(repository, packageName, dirName) // /home/xxx/.dotfiles/package/.config
-				// tools.LogInfo("repo name: " + repoName)
+				// utils.LogInfo("repo name: " + repoName)
 
 				err = os.MkdirAll(repoName, 0750)
 				if err != nil {

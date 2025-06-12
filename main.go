@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"stew/cmd"
-	"stew/tools"
+	"stew/utils"
 
 	"github.com/urfave/cli/v3"
 )
@@ -34,6 +34,6 @@ func main() {
 	}
 
 	if err := stew.Run(context.Background(), os.Args); err != nil {
-		tools.LogFatal(err)
+		utils.LogFatal(err)
 	}
 }

@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"stew/tools"
+	"stew/utils"
 	"strings"
 
 	"github.com/urfave/cli/v3"
@@ -24,7 +24,7 @@ func List(repository string) *cli.Command {
 
 			entries, err := os.ReadDir(repository)
 			if err != nil {
-				tools.LogFatal(err)
+				utils.LogFatal(err)
 			}
 
 			for _, entry := range entries {

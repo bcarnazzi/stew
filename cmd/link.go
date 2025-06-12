@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 	"os/exec"
-	"stew/tools"
+	"stew/utils"
 
 	"github.com/urfave/cli/v3"
 )
@@ -24,10 +24,10 @@ func Link(repository string) *cli.Command {
 			for _, p := range args {
 				cmd := exec.Command("stow", "-d", repository, p)
 				if err := cmd.Run(); err != nil {
-					tools.LogWarn("Cannot link " + p)
+					utils.LogWarn("Cannot link " + p)
 					errCode = err
 				} else {
-					tools.LogInfo(p + " linked")
+					utils.LogInfo(p + " linked")
 				}
 			}
 			return errCode
