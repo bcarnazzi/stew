@@ -15,9 +15,10 @@ import (
 
 func List(repository string) *cli.Command {
 	return &cli.Command{
-		Name:    "list",
-		Aliases: []string{"ls"},
-		Usage:   "List managed dotfiles",
+		Name:      "list",
+		Aliases:   []string{"ls"},
+		Usage:     "List managed dotfiles",
+		ArgsUsage: "[PACKAGE ...]",
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			args := cmd.Args().Slice()
 

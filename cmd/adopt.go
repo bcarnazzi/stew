@@ -22,9 +22,14 @@ func Adopt(home, repository string) *cli.Command {
 				Usage:   "Package name",
 			},
 		},
+		ArgsUsage: "TARGET...",
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			var packageName string
 			args := cmd.Args().Slice()
+
+			if len(args) == 0 {
+				cli.ShowSubcommandHelpAndExit(cmd, 1)
+			}
 
 			name := cmd.String("name")
 			if len(args) == 1 {

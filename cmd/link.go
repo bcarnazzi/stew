@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"os/exec"
 	"stew/tools"
 
@@ -11,14 +10,15 @@ import (
 
 func Link(repository string) *cli.Command {
 	return &cli.Command{
-		Name:    "link",
-		Usage:   "Link managed dotfiles",
-		Aliases: []string{"ln"},
+		Name:      "link",
+		Usage:     "Link managed dotfiles",
+		Aliases:   []string{"ln"},
+		ArgsUsage: "PACKAGE ...",
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			args := cmd.Args().Slice()
 			var errCode error
 			if len(args) == 0 {
-				return fmt.Errorf("need at least one arguments")
+				cli.ShowSubcommandHelpAndExit(cmd, 1)
 			}
 
 			for _, p := range args {
