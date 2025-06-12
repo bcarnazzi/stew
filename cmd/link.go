@@ -13,7 +13,7 @@ func Link(repository string) *cli.Command {
 		Name:      "link",
 		Usage:     "Link managed dotfiles",
 		Aliases:   []string{"ln"},
-		ArgsUsage: "PACKAGE ...",
+		ArgsUsage: "PACKAGE...",
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			args := cmd.Args().Slice()
 			var errCode error
