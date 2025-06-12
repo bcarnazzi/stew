@@ -21,8 +21,9 @@ func main() {
 	repository := filepath.Join(home, stewRepository)
 
 	stew := &cli.Command{
-		Name:  "stew",
-		Usage: "A simple dotfiles manager",
+		Name:    "stew",
+		Usage:   "A simple dotfiles manager",
+		Version: "0.1.0",
 		Commands: []*cli.Command{
 			cmd.Adopt(home, repository),
 			cmd.Doctor(home, repository),
